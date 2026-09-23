@@ -14,6 +14,6 @@
 
 ## Публикация на GitHub Pages
 
-Адрес сайта: https://anna3nia-prog.github.io/mylending/
+Адрес сайта: https://anna3nia-prog.github.io/rabochaya-versiya/
 
 GitHub Pages публикует ветку `gh-pages`. Её не нужно править вручную: при каждом изменении в `main` workflow `.github/workflows/publish-site.yml` копирует содержимое `main` в `gh-pages`, и сайт обновляется через 1–2 минуты.
