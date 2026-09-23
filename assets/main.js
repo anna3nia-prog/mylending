@@ -273,3 +273,63 @@
     select(0, { animate: false });
   });
 })();
+
+/* Длинные списки в карточках: показываем начало и кнопку «Показать всю программу».
+   Без JavaScript списки видны целиком. */
+(function () {
+  var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  var chevron = '<svg class="list-toggle-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var counter = 0;
+
+  document.querySelectorAll(".courses-grid > .course .lesson-list, .courses-grid > .course .check-list").forEach(function (list) {
+    var isLessons = list.classList.contains("lesson-list");
+    var visibleCount = isLessons ? 4 : 5;
+    var items = Array.prototype.slice.call(list.children);
+    // Сворачиваем, только если прячется хотя бы 2 пункта
+    if (items.length < visibleCount + 2) return;
+
+    var extra = items.slice(visibleCount);
+    list.id = list.id || "course-list-" + counter++;
+
+    var button = document.createElement("button");
+    button.type = "button";
+    button.className = "list-toggle";
+    button.setAttribute("aria-controls", list.id);
+    list.parentNode.insertBefore(button, list.nextSibling);
+
+    var moreLabel = (isLessons ? "Показать всю программу" : "Показать весь список") + " · ещё " + extra.length;
+
+    function setExpanded(expanded, byUser) {
+      extra.forEach(function (item, i) {
+        item.hidden = !expanded;
+        if (expanded && byUser && !reduceMotion.matches) {
+          item.style.animationDelay = i * 40 + "ms";
+          item.classList.add("is-revealed");
+          window.setTimeout(function () {
+            item.classList.remove("is-revealed");
+            item.style.animationDelay = "";
+          }, 700 + i * 40);
+        }
+      });
+      list.classList.toggle("is-collapsed", !expanded);
+      button.setAttribute("aria-expanded", String(expanded));
+      button.innerHTML = (expanded ? "Свернуть" : moreLabel) + chevron;
+
+      // После сворачивания возвращаем начало списка в поле зрения
+      if (!expanded && byUser) {
+        var header = document.querySelector(".site-header");
+        var offset = (header ? header.offsetHeight : 0) + 12;
+        var top = list.getBoundingClientRect().top;
+        if (top < offset) {
+          window.scrollBy({ top: top - offset - 40, behavior: reduceMotion.matches ? "auto" : "smooth" });
+        }
+      }
+    }
+
+    button.addEventListener("click", function () {
+      setExpanded(button.getAttribute("aria-expanded") !== "true", true);
+    });
+
+    setExpanded(false, false);
+  });
+})();
