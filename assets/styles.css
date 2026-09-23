@@ -91,6 +91,15 @@
   --footer-link-underline: rgba(252, 249, 243, 0.45);
   --shadow-card: 0 1px 2px rgba(55, 27, 16, 0.04), 0 8px 24px rgba(55, 27, 16, 0.06);
   --shadow-menu: 0 12px 24px rgba(55, 27, 16, 0.08);
+  --shadow-card-hover: 0 2px 4px rgba(55, 27, 16, 0.05), 0 16px 32px rgba(55, 27, 16, 0.1);
+  --color-border-strong: #C7B49D;
+  --color-primary-marker: rgba(166, 43, 70, 0.16);
+  --color-primary-ring: rgba(166, 43, 70, 0.28);
+
+  /* Анимации */
+  --ease-out: cubic-bezier(0.22, 0.7, 0.24, 1);
+  --rise: 20px;
+  --rise-hero: 16px;
 
   --radius: 16px;
   --container: 1120px;
@@ -418,7 +427,7 @@ h2 {
   text-align: center;
   text-decoration: none;
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition: background-color 0.18s ease, color 0.18s ease, transform 0.18s var(--ease-out);
 }
 
 .btn-primary {
@@ -1286,4 +1295,252 @@ h2 {
   height: 9px;
   border-radius: 2px;
   background: var(--color-coral);
+}
+
+/* ---------- Анимации ----------
+   Всё движение — только внутри prefers-reduced-motion: no-preference.
+   Двигаются лишь transform и opacity, поэтому вёрстка не сдвигается. */
+
+/* Маркер под акцентной фразой: виден всегда, анимируется только проявление */
+.hero h1 .accent {
+  background-image: linear-gradient(transparent 64%, var(--color-primary-marker) 64%, var(--color-primary-marker) 92%, transparent 92%);
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+.hero-shape--coral {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  .hero-shape--coral {
+    display: block;
+    right: -34px;
+    bottom: -46px;
+    width: 112px;
+    height: 112px;
+    background: var(--color-coral);
+  }
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, var(--rise-from, var(--rise-hero)), 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes marker-in {
+  from {
+    background-size: 0% 100%;
+  }
+  to {
+    background-size: 100% 100%;
+  }
+}
+
+@keyframes arrow-nudge {
+  0%,
+  100% {
+    transform: none;
+  }
+  45% {
+    transform: translate3d(0, 4px, 0);
+  }
+}
+
+@keyframes drift-a {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(-8px, 6px, 0) scale(1.03);
+  }
+}
+
+@keyframes drift-b {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(7px, -6px, 0) scale(1.025);
+  }
+}
+
+@keyframes drift-c {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(-5px, -7px, 0) scale(1.03);
+  }
+}
+
+@keyframes arrived {
+  0%,
+  100% {
+    box-shadow: var(--shadow-card);
+  }
+  35% {
+    box-shadow: var(--shadow-card), 0 0 0 3px var(--color-primary-ring);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Первый экран: последовательное появление */
+  .js .hero-in {
+    animation: rise-in 600ms var(--ease-out) backwards;
+    animation-delay: calc(80ms + var(--step, 0) * 90ms);
+  }
+
+  .js .hero-note {
+    --rise-from: 18px;
+    animation-duration: 650ms;
+  }
+
+  .js .hero-note-list li {
+    animation: rise-in 500ms var(--ease-out) backwards;
+    --rise-from: 8px;
+  }
+
+  .js .hero-note-list li:nth-child(1) {
+    animation-delay: 620ms;
+  }
+
+  .js .hero-note-list li:nth-child(2) {
+    animation-delay: 700ms;
+  }
+
+  .js .hero-note-list li:nth-child(3) {
+    animation-delay: 780ms;
+  }
+
+  .js .hero h1 .accent {
+    animation: marker-in 700ms var(--ease-out) 620ms backwards;
+  }
+
+  .js .hero-actions .btn-arrow {
+    animation: arrow-nudge 900ms ease-in-out 1100ms 1;
+  }
+
+  /* Фоновые формы: медленное, почти незаметное движение */
+  .hero-shape--secondary {
+    animation: drift-a 18s ease-in-out infinite alternate;
+  }
+
+  .hero-shape--primary {
+    animation: drift-b 23s ease-in-out infinite alternate;
+  }
+
+  .hero-shape--coral {
+    animation: drift-c 27s ease-in-out infinite alternate;
+  }
+
+  /* Появление при прокрутке (классы ставит main.js) */
+  html.js .reveal {
+    opacity: 0;
+    transform: translate3d(0, var(--rise), 0);
+    transition: opacity 600ms var(--ease-out), transform 600ms var(--ease-out);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+
+  html.js .reveal.is-visible {
+    opacity: 1;
+    transform: none;
+  }
+
+  html.js .section-head.reveal {
+    --rise: 12px;
+  }
+
+  html.js .section-head.reveal .eyebrow::before {
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 500ms var(--ease-out);
+    transition-delay: calc(var(--reveal-delay, 0ms) + 250ms);
+  }
+
+  html.js .section-head.reveal.is-visible .eyebrow::before {
+    transform: none;
+  }
+
+  /* Кнопки */
+  .btn:active:not([disabled]) {
+    transform: translate3d(0, 1px, 0) scale(0.985);
+  }
+
+  .btn-arrow {
+    transition: transform 0.2s var(--ease-out);
+  }
+
+  /* Кратковременный акцент на первом ряду карточек после «Выбрать курс» */
+  .course.is-arrived {
+    animation: arrived 1200ms ease-in-out 1;
+  }
+}
+
+/* Наведение — только там, где есть мышь */
+@media (hover: hover) and (pointer: fine) {
+  .course:not(.course--soon),
+  .hero-note {
+    transition: transform 0.25s var(--ease-out), box-shadow 0.25s var(--ease-out), border-color 0.25s ease;
+  }
+
+  .course:not(.course--soon):hover {
+    border-color: var(--color-border-strong);
+    box-shadow: var(--shadow-card-hover);
+  }
+
+  .course--featured:hover {
+    border-color: var(--color-primary-hover);
+  }
+
+  .course:hover .btn-primary {
+    background: var(--color-primary-hover);
+  }
+
+  .hero-note:hover {
+    box-shadow: var(--shadow-card-hover);
+  }
+}
+
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .course:not(.course--soon):hover {
+    transform: translate3d(0, -5px, 0);
+  }
+
+  .hero-note:hover {
+    transform: translate3d(0, -3px, 0);
+  }
+
+  .btn-primary:hover,
+  .btn-outline:hover {
+    transform: translate3d(0, -2px, 0);
+  }
+
+  .hero-actions .btn:hover .btn-arrow {
+    transform: translate3d(0, 3px, 0);
+  }
+
+  .course-buy .btn:hover .btn-arrow {
+    transform: translate3d(2px, -2px, 0);
+  }
+}
+
+/* Телефон: вдвое меньше амплитуда */
+@media (max-width: 760px) {
+  :root {
+    --rise: 12px;
+    --rise-hero: 10px;
+  }
+
+  .js .hero-note {
+    --rise-from: 12px;
+  }
 }
