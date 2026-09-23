@@ -113,3 +113,163 @@
     window.setTimeout(highlight, 1000);
   });
 })();
+
+/* Вкладки в карточках курсов: «Что внутри» → «Что получите» → «Формат».
+   Без JavaScript все блоки видны целиком, как раньше. */
+(function () {
+  var LABELS = {
+    "Что внутри": "Что внутри",
+    "Что вы получите": "Что получите",
+    "Формат обучения": "Формат"
+  };
+  var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  var arrow = '<svg class="course-next-arrow" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 2v11M3.5 8.5 8 13l4.5-4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+  document.querySelectorAll(".courses-grid > .course").forEach(function (card, cardIndex) {
+    var blocks = Array.prototype.filter.call(card.children, function (el) {
+      return el.classList.contains("course-block");
+    });
+    if (blocks.length < 2) return;
+
+    var titles = blocks.map(function (block) {
+      return block.querySelector("h4").textContent.trim();
+    });
+    var baseId = "course-" + cardIndex;
+
+    var tabs = document.createElement("div");
+    tabs.className = "course-tabs";
+
+    var nav = document.createElement("div");
+    nav.className = "course-tabs-nav";
+    nav.setAttribute("role", "tablist");
+    nav.setAttribute("aria-label", "Разделы курса");
+
+    var panelsWrap = document.createElement("div");
+    panelsWrap.className = "course-tabs-panels";
+
+    var buttons = [];
+    var panels = [];
+
+    blocks[0].parentNode.insertBefore(tabs, blocks[0]);
+    tabs.appendChild(nav);
+    tabs.appendChild(panelsWrap);
+
+    blocks.forEach(function (block, i) {
+      var button = document.createElement("button");
+      button.type = "button";
+      button.className = "course-tab";
+      button.id = baseId + "-tab-" + i;
+      button.setAttribute("role", "tab");
+      button.setAttribute("aria-controls", baseId + "-panel-" + i);
+      button.textContent = LABELS[titles[i]] || titles[i];
+      nav.appendChild(button);
+      buttons.push(button);
+
+      block.id = baseId + "-panel-" + i;
+      block.classList.add("course-panel");
+      block.setAttribute("role", "tabpanel");
+      block.setAttribute("aria-labelledby", button.id);
+      block.querySelector("h4").classList.add("visually-hidden");
+      panelsWrap.appendChild(block);
+      panels.push(block);
+
+      if (i < blocks.length - 1) {
+        var next = document.createElement("button");
+        next.type = "button";
+        next.className = "course-next";
+        next.innerHTML = "Дальше: " + (LABELS[titles[i + 1]] || titles[i + 1]).toLowerCase() + arrow;
+        next.addEventListener("click", function () {
+          select(i + 1, { focusTab: false, scroll: true });
+        });
+        block.appendChild(next);
+      }
+    });
+
+    var current = 0;
+
+    function select(index, options) {
+      options = options || {};
+      if (index < 0 || index >= panels.length) return;
+      var animate = !reduceMotion.matches && options.animate !== false;
+      var from = current;
+      current = index;
+
+      buttons.forEach(function (button, i) {
+        var active = i === index;
+        button.setAttribute("aria-selected", String(active));
+        button.tabIndex = active ? 0 : -1;
+      });
+
+      if (animate && from !== index) {
+        // Плавно меняем высоту области, чтобы карточка не прыгала
+        var startHeight = panelsWrap.offsetHeight;
+        panelsWrap.style.height = startHeight + "px";
+        panels.forEach(function (panel, i) { panel.hidden = i !== index; });
+        var endHeight = panels[index].offsetHeight;
+        panelsWrap.classList.remove("is-animating");
+        void panelsWrap.offsetWidth;
+        panelsWrap.classList.add("is-animating");
+        panels[index].classList.remove("is-entering", "is-entering-back");
+        void panels[index].offsetWidth;
+        panels[index].classList.add(index > from ? "is-entering" : "is-entering-back");
+        panelsWrap.style.height = endHeight + "px";
+        window.setTimeout(function () {
+          panelsWrap.style.height = "";
+          panelsWrap.classList.remove("is-animating");
+          panels[index].classList.remove("is-entering", "is-entering-back");
+        }, 460);
+      } else {
+        panels.forEach(function (panel, i) { panel.hidden = i !== index; });
+      }
+
+      if (options.focusTab) buttons[index].focus();
+
+      // Если начало вкладок ушло под шапку — возвращаем его в поле зрения
+      if (options.scroll) {
+        var header = document.querySelector(".site-header");
+        var offset = (header ? header.offsetHeight : 0) + 12;
+        var top = nav.getBoundingClientRect().top;
+        if (top < offset) {
+          window.scrollBy({ top: top - offset, behavior: reduceMotion.matches ? "auto" : "smooth" });
+        }
+      }
+    }
+
+    buttons.forEach(function (button, i) {
+      button.addEventListener("click", function () { select(i); });
+      button.addEventListener("keydown", function (event) {
+        var target = null;
+        if (event.key === "ArrowRight") target = (i + 1) % buttons.length;
+        if (event.key === "ArrowLeft") target = (i - 1 + buttons.length) % buttons.length;
+        if (event.key === "Home") target = 0;
+        if (event.key === "End") target = buttons.length - 1;
+        if (target !== null) {
+          event.preventDefault();
+          select(target, { focusTab: true });
+        }
+      });
+    });
+
+    // Свайп влево/вправо по содержимому; вертикальная прокрутка не перехватывается
+    var startX = 0;
+    var startY = 0;
+    var tracking = false;
+    panelsWrap.addEventListener("touchstart", function (event) {
+      if (event.touches.length !== 1) return;
+      startX = event.touches[0].clientX;
+      startY = event.touches[0].clientY;
+      tracking = true;
+    }, { passive: true });
+    panelsWrap.addEventListener("touchend", function (event) {
+      if (!tracking) return;
+      tracking = false;
+      var dx = event.changedTouches[0].clientX - startX;
+      var dy = event.changedTouches[0].clientY - startY;
+      if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+      select(dx < 0 ? current + 1 : current - 1, { scroll: true });
+    }, { passive: true });
+
+    card.classList.add("has-tabs");
+    select(0, { animate: false });
+  });
+})();

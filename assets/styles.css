@@ -91,6 +91,7 @@
   --footer-link-underline: rgba(252, 249, 243, 0.45);
   --shadow-card: 0 1px 2px rgba(55, 27, 16, 0.04), 0 8px 24px rgba(55, 27, 16, 0.06);
   --shadow-menu: 0 12px 24px rgba(55, 27, 16, 0.08);
+  --shadow-tab: 0 1px 3px rgba(55, 27, 16, 0.12);
   --shadow-card-hover: 0 2px 4px rgba(55, 27, 16, 0.05), 0 16px 32px rgba(55, 27, 16, 0.1);
   --color-border-strong: #C7B49D;
   --color-primary-marker: rgba(166, 43, 70, 0.16);
@@ -1542,5 +1543,162 @@ h2 {
 
   .js .hero-note {
     --rise-from: 12px;
+  }
+}
+
+/* ---------- Вкладки в карточках курсов ---------- */
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.course-tabs {
+  margin-top: 24px;
+}
+
+.course-tabs-nav {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  padding: 4px;
+  border-radius: 12px;
+  background: var(--color-surface-warm);
+}
+
+.course-tab {
+  min-height: 40px;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.25;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.course-tab:hover {
+  color: var(--color-text);
+}
+
+.course-tab[aria-selected="true"] {
+  background: var(--color-surface);
+  color: var(--color-primary);
+  box-shadow: var(--shadow-tab);
+}
+
+.course-tab:focus-visible {
+  outline-offset: 1px;
+}
+
+.course--soon .course-tab[aria-selected="true"] {
+  background: var(--color-background);
+}
+
+.course-tabs-panels {
+  position: relative;
+}
+
+.course-tabs-panels.is-animating {
+  overflow: hidden;
+  transition: height 420ms var(--ease-out);
+}
+
+.course-tabs .course-panel {
+  margin-top: 0;
+  padding-top: 20px;
+}
+
+.course-tabs .course-panel[hidden] {
+  display: none;
+}
+
+.course-next {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  margin-top: 12px;
+  padding: 8px 0;
+  border: 0;
+  background: none;
+  color: var(--color-primary);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.course-next:hover {
+  color: var(--color-primary-hover);
+}
+
+.course-next-arrow {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+
+@keyframes panel-in-up {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 24px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes panel-in-down {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -16px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .course-panel.is-entering {
+    animation: panel-in-up 420ms var(--ease-out) both;
+  }
+
+  .course-panel.is-entering-back {
+    animation: panel-in-down 380ms var(--ease-out) both;
+  }
+
+  .course-next-arrow {
+    transition: transform 0.2s var(--ease-out);
+  }
+
+  .course-next:hover .course-next-arrow {
+    transform: translate3d(0, 3px, 0);
+  }
+}
+
+@media (max-width: 760px) {
+  @keyframes panel-in-up {
+    from {
+      opacity: 0;
+      transform: translate3d(0, 14px, 0);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
   }
 }
