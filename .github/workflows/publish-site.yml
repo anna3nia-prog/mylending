@@ -1,0 +1,26 @@
+# Сайт публикуется GitHub Pages из ветки gh-pages.
+# При каждом изменении в main содержимое копируется в gh-pages,
+# после чего GitHub Pages автоматически пересобирает сайт.
+name: Публикация сайта
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-site
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Обновить ветку gh-pages
+        run: git push --force origin HEAD:refs/heads/gh-pages
