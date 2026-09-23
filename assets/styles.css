@@ -1122,3 +1122,48 @@ h2 {
     margin-bottom: 48px;
   }
 }
+
+.course-block-lead {
+  margin-bottom: 14px;
+  color: var(--ink-2);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.lesson-list {
+  display: grid;
+  gap: 14px;
+  padding: 0;
+  list-style: none;
+  counter-reset: lesson;
+}
+
+.lesson-list li {
+  position: relative;
+  padding-left: 34px;
+  counter-increment: lesson;
+}
+
+.lesson-list li::before {
+  content: counter(lesson, decimal-leading-zero);
+  position: absolute;
+  left: 0;
+  top: 1px;
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.lesson-title {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.lesson-text {
+  margin-top: 2px;
+  color: var(--ink-2);
+  font-size: 15px;
+  line-height: 1.5;
+}
